@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "blog_posts" ALTER COLUMN "slug" DROP NOT NULL,
+ALTER COLUMN "title" DROP NOT NULL;

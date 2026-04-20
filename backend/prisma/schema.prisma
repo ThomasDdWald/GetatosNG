@@ -1,0 +1,409 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  fullName     String?   @map("full_name")
+  role         String    @default("admin")
+  isActive     Boolean   @default(true) @map("is_active")
+  // TOTP 2FA fields
+  totpSecret   String?   @map("totp_secret")   // Encrypted TOTP secret
+  totpEnabled  Boolean   @default(false) @map("totp_enabled")
+  lastLogin    DateTime? @map("last_login")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("admin_users")
+}
+
+model Tour {
+  id               Int          @id @default(autoincrement())
+  slugDe           String?      @map("slug_de")
+  slugEn           String?      @map("slug_en")
+  slugEs           String?      @map("slug_es")
+  slugFr           String?      @map("slug_fr")
+  slugZh           String?      @map("slug_zh")
+  tourType         String       @map("tour_type")
+  durationDays     Int          @map("duration_days")
+  difficulty       String?
+  priceEn          Float?       @map("price_en")
+  priceDe          Float?       @map("price_de")
+  priceEs          Float?       @map("price_es")
+  priceFr          Float?       @map("price_fr")
+  priceZh          Float?       @map("price_zh")
+  currencyEn       String?      @map("currency_en")
+  currencyDe       String?      @map("currency_de")
+  currencyEs       String?      @map("currency_es")
+  currencyFr       String?      @map("currency_fr")
+  currencyZh       String?      @map("currency_zh")
+
+  maxGroupSize     Int?         @map("max_group_size")
+  highlightsEn     Json?        @map("highlights_en")
+  highlightsDe     Json?        @map("highlights_de")
+  highlightsEs     Json?        @map("highlights_es")
+  highlightsFr     Json?        @map("highlights_fr")
+  highlightsZh     Json?        @map("highlights_zh")
+  includedEn       Json?        @map("included_en")
+  includedDe       Json?        @map("included_de")
+  includedEs       Json?        @map("included_es")
+  includedFr       Json?        @map("included_fr")
+  includedZh       Json?        @map("included_zh")
+  notIncludedEn    Json?        @map("not_included_en")
+  notIncludedDe    Json?        @map("not_included_de")
+  notIncludedEs    Json?        @map("not_included_es")
+  notIncludedFr    Json?        @map("not_included_fr")
+  notIncludedZh    Json?        @map("not_included_zh")
+  isFeatured       Boolean      @default(false) @map("is_featured")
+  isActive         Boolean      @default(true) @map("is_active")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  // Multi-language fields (ALL with language suffix)
+  titleEn           String?      @map("title_en")
+  titleDe           String?      @map("title_de")
+  titleEs           String?      @map("title_es")
+  titleFr           String?      @map("title_fr")
+  titleZh           String?      @map("title_zh")
+  descriptionEn     String?      @map("description_en")
+  descriptionDe     String?      @map("description_de")
+  descriptionEs     String?      @map("description_es")
+  descriptionFr     String?      @map("description_fr")
+  descriptionZh     String?      @map("description_zh")
+  shortDescriptionEn String?    @map("short_description_en")
+  shortDescriptionDe String?    @map("short_description_de")
+  shortDescriptionEs String?    @map("short_description_es")
+  shortDescriptionFr String?    @map("short_description_fr")
+  shortDescriptionZh String?    @map("short_description_zh")
+
+  // SEO meta tags (multi-language)
+  metaTitleDe       String?   @map("meta_title_de")
+  metaTitleEn       String?   @map("meta_title_en")
+  metaTitleEs       String?   @map("meta_title_es")
+  metaTitleFr       String?   @map("meta_title_fr")
+  metaTitleZh       String?   @map("meta_title_zh")
+  metaDescriptionDe String?   @map("meta_description_de")
+  metaDescriptionEn String?   @map("meta_description_en")
+  metaDescriptionEs String?   @map("meta_description_es")
+  metaDescriptionFr String?   @map("meta_description_fr")
+  metaDescriptionZh String?   @map("meta_description_zh")
+
+  // Map/Route coordinates
+  startLat      Float?    @map("start_lat")
+  startLng      Float?    @map("start_lng")
+  startName     String?   @map("start_name")
+  endLat        Float?    @map("end_lat")
+  endLng        Float?    @map("end_lng")
+  endName       String?   @map("end_name")
+  
+  // Waypoints as JSON string
+  waypoints     String?   @map("waypoints")
+
+  images     TourImage[]
+  itinerary  Itinerary[]
+  bookings   Booking[]
+  testimonials Testimonial[]
+
+  @@map("tours")
+}
+
+model TourImage {
+  id          Int     @id @default(autoincrement())
+  tourId      Int     @map("tour_id")
+  url         String
+  altText     String? @map("alt_text")
+  isCover     Boolean @default(false) @map("is_cover")
+  displayOrder Int    @default(0) @map("display_order")
+
+  tour Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  @@map("tour_images")
+}
+
+model Itinerary {
+  id           Int     @id @default(autoincrement())
+  tourId       Int     @map("tour_id")
+  dayNumber    Int     @map("day_number")
+  title        String
+  description  String?
+  accommodation String?
+  meals        String?
+
+  // Multi-language fields
+  titleDe        String?   @map("title_de")
+  titleEn        String?   @map("title_en")
+  titleEs        String?   @map("title_es")
+  titleFr        String?   @map("title_fr")
+  titleZh        String?   @map("title_zh")
+  descriptionDe  String?   @map("description_de")
+  descriptionEn  String?   @map("description_en")
+  descriptionEs  String?   @map("description_es")
+  descriptionFr  String?   @map("description_fr")
+  descriptionZh  String?   @map("description_zh")
+  accommodationDe String? @map("accommodation_de")
+  accommodationEn String? @map("accommodation_en")
+  accommodationEs String? @map("accommodation_es")
+  accommodationFr String? @map("accommodation_fr")
+  accommodationZh String? @map("accommodation_zh")
+  mealsDe        String?   @map("meals_de")
+  mealsEn        String?   @map("meals_en")
+  mealsEs        String?   @map("meals_es")
+  mealsFr        String?   @map("meals_fr")
+  mealsZh        String?   @map("meals_zh")
+
+  tour Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  @@map("itinerary")
+}
+
+model Booking {
+  id              Int        @id @default(autoincrement())
+  tourId          Int        @map("tour_id")
+  fullName        String     @map("full_name")
+  email           String
+  phone           String?
+  nationality     String?
+  travelDate      DateTime?  @map("travel_date")
+  numberOfGuests  Int        @default(1) @map("number_of_guests")
+  additionalGuests String?   @map("additional_guests")
+  specialRequests String?    @map("special_requests")
+  status          String     @default("pending")
+  totalPrice      Float?     @map("total_price")
+  currency        String?     @default("EUR")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  tour Tour @relation(fields: [tourId], references: [id])
+
+  @@map("bookings")
+}
+
+model BlogPost {
+  id            Int       @id @default(autoincrement())
+  slug          String?   @unique // Nur für interne ID, URLs verwenden slugDe/slugEn etc.
+  featuredImage String?   @map("featured_image")
+  author        String?
+  isPublished   Boolean   @default(true) @map("is_published")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Legacy-Felder (für Abwärtskompatibilität mit bestehender DB)
+  title        String?   @map("title")
+  content      String?   @map("content")
+  excerpt      String?   @map("excerpt")
+
+  // Multi-language fields
+  titleDe       String?   @map("title_de")
+  titleEn      String?   @map("title_en")
+  titleEs       String?   @map("title_es")
+  titleFr       String?   @map("title_fr")
+  titleZh       String?   @map("title_zh")
+  contentDe     String?   @map("content_de")
+  contentEn     String?   @map("content_en")
+  contentEs     String?   @map("content_es")
+  contentFr     String?   @map("content_fr")
+  contentZh     String?   @map("content_zh")
+  excerptDe     String?   @map("excerpt_de")
+  excerptEn     String?   @map("excerpt_en")
+  excerptEs     String?   @map("excerpt_es")
+  excerptFr     String?   @map("excerpt_fr")
+  excerptZh     String?   @map("excerpt_zh")
+  slugDe        String?   @map("slug_de")
+  slugEn        String?   @map("slug_en")
+  slugEs        String?   @map("slug_es")
+  slugFr        String?   @map("slug_fr")
+  slugZh        String?   @map("slug_zh")
+  
+  // Category per Sprache
+  categoryDe    String?   @map("category_de")
+  categoryEn   String?   @map("category_en")
+  categoryEs   String?   @map("category_es")
+  categoryFr   String?   @map("category_fr")
+  categoryZh   String?   @map("category_zh")
+  
+  // SEO fields per Sprache
+  metaTitleDe       String?   @map("meta_title_de")
+  metaTitleEn       String?   @map("meta_title_en")
+  metaTitleEs       String?   @map("meta_title_es")
+  metaTitleFr       String?   @map("meta_title_fr")
+  metaTitleZh       String?   @map("meta_title_zh")
+  metaDescriptionDe String?   @map("meta_description_de")
+  metaDescriptionEn String?   @map("meta_description_en")
+  metaDescriptionEs String?   @map("meta_description_es")
+  metaDescriptionFr String?   @map("meta_description_fr")
+  metaDescriptionZh String?   @map("meta_description_zh")
+  h1De             String?   @map("h1_de")
+  h1En             String?   @map("h1_en")
+  h1Es             String?   @map("h1_es")
+  h1Fr             String?   @map("h1_fr")
+  h1Zh             String?   @map("h1_zh")
+  featuredImageAltDe String? @map("featured_image_alt_de")
+  featuredImageAltEn String? @map("featured_image_alt_en")
+  featuredImageAltEs String? @map("featured_image_alt_es")
+  featuredImageAltFr String? @map("featured_image_alt_fr")
+  featuredImageAltZh String? @map("featured_image_alt_zh")
+
+  @@map("blog_posts")
+}
+
+model Testimonial {
+  id           Int      @id @default(autoincrement())
+  tourId       Int?     @map("tour_id")
+  guestName    String   @map("guest_name")
+  guestCountry String?  @map("guest_country")
+  rating       Int
+  comment      String?
+  isApproved   Boolean  @default(false) @map("is_approved")
+  isFeatured   Boolean  @default(false) @map("is_featured")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  tour Tour? @relation(fields: [tourId], references: [id])
+
+  @@map("testimonials")
+}
+
+model Subscriber {
+  id            Int        @id @default(autoincrement())
+  email         String     @unique
+  firstName     String?    @map("first_name")
+  isActive      Boolean    @default(true) @map("is_active")
+  subscribedAt  DateTime   @default(now()) @map("subscribed_at")
+  unsubscribedAt DateTime? @map("unsubscribed_at")
+
+  @@map("subscribers")
+}
+
+model Translation {
+  id           Int       @id @default(autoincrement())
+  languageCode String    @map("language_code")
+  pageKey      String    @map("page_key")
+  key          String
+  value        String
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([languageCode, pageKey, key])
+  @@map("translations")
+}
+
+model SiteSetting {
+  id           Int       @id @default(autoincrement())
+  settingKey   String    @unique @map("setting_key")
+  settingValue String?   @map("setting_value")
+  settingType  String?   @map("setting_type")
+  category     String?
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+model CompanyInfo {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String?
+  category    String?
+  displayOrder Int     @default(0) @map("display_order")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("company_info")
+}
+
+model SocialMedia {
+  id           Int      @id @default(autoincrement())
+  platform     String
+  username     String?
+  url          String?
+  icon         String?
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("social_media")
+}
+
+model SEOConfig {
+  id              Int     @id @default(autoincrement())
+  pageKey         String  @unique @map("page_key")
+  metaTitle       String? @map("meta_title")
+  metaDescription String? @map("meta_description")
+  metaKeywords    String? @map("meta_keywords")
+  ogImage         String? @map("og_image")
+  canonicalUrl    String? @map("canonical_url")
+  noIndex        Boolean @default(false) @map("no_index")
+  noFollow       Boolean @default(false) @map("no_follow")
+  schemaMarkup   String? @map("schema_markup")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_config")
+}
+
+model GalleryImage {
+  id           Int      @id @default(autoincrement())
+  title        String?
+  title_de     String?  @map("title_de")
+  title_es     String?  @map("title_es")
+  title_fr     String?  @map("title_fr")
+  title_zh     String?  @map("title_zh")
+  description  String?
+  description_de  String?  @map("description_de")
+  description_es  String?  @map("description_es")
+  description_fr  String?  @map("description_fr")
+  description_zh  String?  @map("description_zh")
+  url          String
+  slug         String?   @unique
+  category     String?
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("gallery_images")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("contact_messages")
+}
+
+model TermsAndCondition {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String   @db.Text
+  language    String   @default("en")
+  type        String   @default("agb") // agb, privacy, cancellation
+  isActive    Boolean  @default(true) @map("is_active")
+  version     String   @default("1.0")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([language, type])
+  @@map("terms_and_conditions")
+}
+
+model FAQ {
+  id          Int      @id @default(autoincrement())
+  question    String
+  answer      String   @db.Text
+  category    String?
+  displayOrder Int     @default(0) @map("display_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  language    String   @default("en")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
